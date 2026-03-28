@@ -4075,6 +4075,38 @@
           "Widget"
         ]
       }
+    },
+    "/api/v1/canvases/{canvas_id}/lint": {
+      "get": {
+        "summary": "Lint canvas",
+        "description": "Runs static analysis on a canvas and returns structured issues grouped by severity",
+        "operationId": "Canvases_LintCanvas",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/CanvasesLintCanvasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googlerpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "canvas_id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Canvas"
+        ]
+      }
     }
   },
   "definitions": {
@@ -7425,6 +7457,76 @@
       ],
       "default": "NULL_VALUE",
       "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "CanvasesLintIssue": {
+      "type": "object",
+      "properties": {
+        "severity": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "nodeId": {
+          "type": "string"
+        },
+        "nodeName": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "CanvasesLintCanvasSummary": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "errors": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "warnings": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "info": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "CanvasesLintCanvasResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CanvasesLintIssue"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CanvasesLintIssue"
+          }
+        },
+        "info": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CanvasesLintIssue"
+          }
+        },
+        "summary": {
+          "$ref": "#/definitions/CanvasesLintCanvasSummary"
+        }
+      }
     }
   }
 }

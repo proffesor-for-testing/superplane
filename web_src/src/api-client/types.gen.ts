@@ -368,6 +368,29 @@ export type CanvasesDescribeCanvasChangeRequestResponse = {
   changeRequest?: CanvasesCanvasChangeRequest;
 };
 
+export type CanvasesLintIssue = {
+  severity?: string;
+  rule?: string;
+  nodeId?: string;
+  nodeName?: string;
+  message?: string;
+};
+
+export type CanvasesLintCanvasSummary = {
+  total?: number;
+  errors?: number;
+  warnings?: number;
+  info?: number;
+};
+
+export type CanvasesLintCanvasResponse = {
+  status?: string;
+  errors?: Array<CanvasesLintIssue>;
+  warnings?: Array<CanvasesLintIssue>;
+  info?: Array<CanvasesLintIssue>;
+  summary?: CanvasesLintCanvasSummary;
+};
+
 export type CanvasesDescribeCanvasResponse = {
   canvas?: CanvasesCanvas;
 };
@@ -4369,3 +4392,30 @@ export type WidgetsDescribeWidgetResponses = {
 };
 
 export type WidgetsDescribeWidgetResponse2 = WidgetsDescribeWidgetResponses[keyof WidgetsDescribeWidgetResponses];
+
+export type CanvasesLintCanvasData = {
+  body?: never;
+  path: {
+    canvas_id: string;
+  };
+  query?: never;
+  url: "/api/v1/canvases/{canvas_id}/lint";
+};
+
+export type CanvasesLintCanvasErrors = {
+  /**
+   * An unexpected error response.
+   */
+  default: GooglerpcStatus;
+};
+
+export type CanvasesLintCanvasError = CanvasesLintCanvasErrors[keyof CanvasesLintCanvasErrors];
+
+export type CanvasesLintCanvasResponses = {
+  /**
+   * A successful response.
+   */
+  200: CanvasesLintCanvasResponse;
+};
+
+export type CanvasesLintCanvasResponse2 = CanvasesLintCanvasResponses[keyof CanvasesLintCanvasResponses];

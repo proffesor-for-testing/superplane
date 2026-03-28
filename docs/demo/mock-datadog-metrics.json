@@ -1,0 +1,75 @@
+{
+  "series": [
+    {
+      "metric": "api.gateway.error_rate_5xx",
+      "display_name": "API Gateway 5xx Error Rate",
+      "points": [
+        [1711633200, 0.1],
+        [1711633260, 0.3],
+        [1711633320, 2.1],
+        [1711633380, 8.7],
+        [1711633440, 15.3],
+        [1711633500, 14.8]
+      ],
+      "timeseries": [
+        {"timestamp": 1711633200, "value": 0.1},
+        {"timestamp": 1711633260, "value": 0.3},
+        {"timestamp": 1711633320, "value": 2.1},
+        {"timestamp": 1711633380, "value": 8.7},
+        {"timestamp": 1711633440, "value": 15.3},
+        {"timestamp": 1711633500, "value": 14.8}
+      ],
+      "tags": ["service:api-gateway", "env:production", "endpoint:orders"],
+      "unit": [{"family": "percentage", "scale_factor": 1.0, "name": "percent", "short_name": "%"}]
+    },
+    {
+      "metric": "api.gateway.latency_p99",
+      "display_name": "API Gateway P99 Latency",
+      "points": [
+        [1711633200, 120],
+        [1711633260, 145],
+        [1711633320, 890],
+        [1711633380, 2340],
+        [1711633440, 4500],
+        [1711633500, 4200]
+      ],
+      "timeseries": [
+        {"timestamp": 1711633200, "value": 120},
+        {"timestamp": 1711633260, "value": 145},
+        {"timestamp": 1711633320, "value": 890},
+        {"timestamp": 1711633380, "value": 2340},
+        {"timestamp": 1711633440, "value": 4500},
+        {"timestamp": 1711633500, "value": 4200}
+      ],
+      "tags": ["service:api-gateway", "env:production"],
+      "unit": [{"family": "time", "scale_factor": 0.001, "name": "millisecond", "short_name": "ms"}]
+    },
+    {
+      "metric": "db.connections.active",
+      "display_name": "Active Database Connections",
+      "points": [
+        [1711633200, 18],
+        [1711633260, 22],
+        [1711633320, 35],
+        [1711633380, 48],
+        [1711633440, 50],
+        [1711633500, 50]
+      ],
+      "timeseries": [
+        {"timestamp": 1711633200, "value": 18},
+        {"timestamp": 1711633260, "value": 22},
+        {"timestamp": 1711633320, "value": 35},
+        {"timestamp": 1711633380, "value": 48},
+        {"timestamp": 1711633440, "value": 50},
+        {"timestamp": 1711633500, "value": 50}
+      ],
+      "tags": ["service:api-gateway", "env:production", "db:postgres"],
+      "unit": [{"family": "count", "scale_factor": 1.0, "name": "connection", "short_name": "conn"}]
+    }
+  ],
+  "from_date": 1711633200,
+  "to_date": 1711633500,
+  "query": "avg:api.gateway.error_rate_5xx{env:production} by {service}, avg:api.gateway.latency_p99{env:production} by {service}, avg:db.connections.active{env:production} by {service}",
+  "res_type": "time_series",
+  "status": "ok"
+}

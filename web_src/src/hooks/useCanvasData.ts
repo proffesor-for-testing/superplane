@@ -23,6 +23,7 @@ import {
   canvasesListChildExecutions,
   canvasesListNodeQueueItems,
   canvasesListNodeEvents,
+  canvasesLintCanvas,
   triggersListTriggers,
   triggersDescribeTrigger,
   widgetsListWidgets,
@@ -88,6 +89,7 @@ export const canvasKeys = {
   nodeQueueItemHistory: (canvasId: string, nodeId: string) =>
     [...canvasKeys.nodeQueueItems(), "infinite", canvasId, nodeId] as const,
   canvasMemoryEntries: (canvasId: string) => [...canvasKeys.all, "memoryEntries", canvasId] as const,
+  lint: (canvasId: string) => [...canvasKeys.all, "lint", canvasId] as const,
 };
 
 export const triggerKeys = {
@@ -150,6 +152,22 @@ export const useCanvas = (organizationId: string, canvasId: string) => {
       return response.data?.canvas;
     },
     staleTime: 0,
+    enabled: !!organizationId && !!canvasId,
+  });
+};
+
+export const useCanvasLint = (organizationId: string, canvasId: string) => {
+  return useQuery({
+    queryKey: canvasKeys.lint(canvasId),
+    queryFn: async () => {
+      const response = await canvasesLintCanvas(
+        withOrganizationHeader({
+          path: { canvas_id: canvasId },
+        }),
+      );
+      return response.data;
+    },
+    staleTime: 30_000,
     enabled: !!organizationId && !!canvasId,
   });
 };
@@ -382,6 +400,7 @@ export const useUpdateCanvas = (organizationId: string, canvasId: string) => {
       queryClient.invalidateQueries({ queryKey: canvasKeys.detail(organizationId, canvasId) });
       queryClient.invalidateQueries({ queryKey: canvasKeys.versionList(canvasId) });
       queryClient.invalidateQueries({ queryKey: canvasKeys.versionHistory(canvasId) });
+      queryClient.invalidateQueries({ queryKey: canvasKeys.lint(canvasId) });
 
       const updatedCanvas = response?.data?.canvas;
       if (updatedCanvas) {
@@ -524,6 +543,7 @@ export const useUpdateCanvasVersion = (organizationId: string, canvasId: string)
       queryClient.invalidateQueries({ queryKey: canvasKeys.changeRequests() });
       queryClient.invalidateQueries({ queryKey: canvasKeys.changeRequestList(canvasId) });
       queryClient.invalidateQueries({ queryKey: canvasKeys.versionHistory(canvasId) });
+      queryClient.invalidateQueries({ queryKey: canvasKeys.lint(canvasId) });
     },
   });
 };

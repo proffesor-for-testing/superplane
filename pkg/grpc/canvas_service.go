@@ -337,6 +337,11 @@ func (s *CanvasService) CancelExecution(ctx context.Context, req *pb.CancelExecu
 	return canvases.CancelExecution(ctx, s.authService, s.encryptor, organizationID, s.registry, canvasID, executionID)
 }
 
+func (s *CanvasService) LintCanvas(ctx context.Context, req *pb.LintCanvasRequest) (*pb.LintCanvasResponse, error) {
+	organizationID := ctx.Value(authorization.OrganizationContextKey).(string)
+	return canvases.LintCanvas(ctx, s.registry, organizationID, req.CanvasId)
+}
+
 func (s *CanvasService) ResolveExecutionErrors(ctx context.Context, req *pb.ResolveExecutionErrorsRequest) (*pb.ResolveExecutionErrorsResponse, error) {
 	canvasID, err := uuid.Parse(req.CanvasId)
 	if err != nil {

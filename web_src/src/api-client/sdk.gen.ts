@@ -312,6 +312,9 @@ import type {
   WidgetsListWidgetsData,
   WidgetsListWidgetsErrors,
   WidgetsListWidgetsResponses,
+  CanvasesLintCanvasData,
+  CanvasesLintCanvasErrors,
+  CanvasesLintCanvasResponses,
 } from "./types.gen";
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<
@@ -1918,5 +1921,18 @@ export const widgetsDescribeWidget = <ThrowOnError extends boolean = true>(
 ) =>
   (options.client ?? client).get<WidgetsDescribeWidgetResponses, WidgetsDescribeWidgetErrors, ThrowOnError>({
     url: "/api/v1/widgets/{name}",
+    ...options,
+  });
+
+/**
+ * Lint canvas
+ *
+ * Runs static analysis on a canvas and returns structured issues grouped by severity
+ */
+export const canvasesLintCanvas = <ThrowOnError extends boolean = true>(
+  options: Options<CanvasesLintCanvasData, ThrowOnError>,
+) =>
+  (options.client ?? client).get<CanvasesLintCanvasResponses, CanvasesLintCanvasErrors, ThrowOnError>({
+    url: "/api/v1/canvases/{canvas_id}/lint",
     ...options,
   });

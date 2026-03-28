@@ -2,21 +2,25 @@ import { OrganizationMenuButton } from "@/components/OrganizationMenuButton";
 import { PermissionTooltip } from "@/components/PermissionGate";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import {
+  AlertTriangle,
+  CheckCircle2,
   CloudAlert,
   CloudCheck,
   Copy,
   Download,
   ChevronDown,
+  Loader2,
   Palette,
   Plus,
   RefreshCw,
   RotateCcw,
   Undo2,
   Pencil,
+  XCircle,
 } from "lucide-react";
 import { Button } from "../button";
 import { Button as UIButton } from "@/components/ui/button";
-import { useCanvases } from "@/hooks/useCanvasData";
+import { useCanvases, useCanvasLint } from "@/hooks/useCanvasData";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -212,6 +216,70 @@ function CanvasSaveStatusIndicator({
     >
       Unsaved
     </span>
+  );
+}
+
+function LintStatusBadge({ organizationId, canvasId }: { organizationId?: string; canvasId?: string }) {
+  const { data, isLoading } = useCanvasLint(organizationId || "", canvasId || "");
+
+  if (!organizationId || !canvasId) return null;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-500">
+        <Loader2 size={12} className="animate-spin" />
+        <span>Linting…</span>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const errorCount = data.summary?.errors ?? 0;
+  const warningCount = data.summary?.warnings ?? 0;
+
+  if (data.status === "fail") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex cursor-default items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+            <XCircle size={12} />
+            <span>{errorCount} {errorCount === 1 ? "error" : "errors"}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          {errorCount} lint {errorCount === 1 ? "error" : "errors"} — canvas will not run correctly
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (warningCount > 0) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex cursor-default items-center gap-1 rounded-md border border-yellow-200 bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
+            <AlertTriangle size={12} />
+            <span>{warningCount} {warningCount === 1 ? "warning" : "warnings"}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          {warningCount} lint {warningCount === 1 ? "warning" : "warnings"} — canvas works but has quality issues
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex cursor-default items-center gap-1 rounded-md border border-green-200 bg-green-50 px-2 py-1 text-xs font-medium text-green-700">
+          <CheckCircle2 size={12} />
+          <span>Lint OK</span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">No lint issues found</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -552,11 +620,14 @@ export function Header({
                   </span>
                 ) : null}
                 {topViewMode === "canvas" || topViewMode === undefined ? (
-                  <CanvasSaveStatusIndicator
-                    saveState={saveState}
-                    lastSavedAt={lastSavedAt}
-                    saveErrorMessage={saveErrorMessage}
-                  />
+                  <>
+                    <LintStatusBadge organizationId={organizationId} canvasId={workflowId} />
+                    <CanvasSaveStatusIndicator
+                      saveState={saveState}
+                      lastSavedAt={lastSavedAt}
+                      saveErrorMessage={saveErrorMessage}
+                    />
+                  </>
                 ) : null}
                 {onUndo && canUndo ? (
                   <Button onClick={onUndo} size="sm" variant="outline">
@@ -584,6 +655,7 @@ export function Header({
 
             {showVersionEditActions ? (
               <div className="flex items-center gap-2">
+                <LintStatusBadge organizationId={organizationId} canvasId={workflowId} />
                 <CanvasSaveStatusIndicator
                   saveState={saveState}
                   lastSavedAt={lastSavedAt}
@@ -627,8 +699,10 @@ export function Header({
               </div>
             ) : null}
 
-            {showEditButton
-              ? wrapWithTooltip(
+            {showEditButton ? (
+              <>
+                <LintStatusBadge organizationId={organizationId} canvasId={workflowId} />
+                {wrapWithTooltip(
                   enterEditModeDisabled,
                   enterEditModeDisabledTooltip,
                   <UIButton
@@ -641,8 +715,9 @@ export function Header({
                     <Pencil className="size-3.5" />
                     Edit
                   </UIButton>,
-                )
-              : null}
+                )}
+              </>
+            ) : null}
           </div>
         </div>
       </header>

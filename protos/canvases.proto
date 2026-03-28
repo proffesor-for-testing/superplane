@@ -364,6 +364,17 @@ service Canvases {
     };
   }
 
+  rpc LintCanvas(LintCanvasRequest) returns (LintCanvasResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/canvases/{canvas_id}/lint"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      summary: "Lint canvas";
+      description: "Runs static analysis on a canvas and returns structured issues";
+      tags: "Canvas";
+    };
+  }
+
 }
 
 message ListCanvasesRequest {
@@ -917,4 +928,31 @@ message CanvasVersionMessage {
   string canvas_id = 1;
   string version_id = 2;
   google.protobuf.Timestamp timestamp = 3;
+}
+
+message LintCanvasRequest {
+  string canvas_id = 1;
+}
+
+message LintIssue {
+  string severity  = 1;
+  string rule      = 2;
+  string node_id   = 3;
+  string node_name = 4;
+  string message   = 5;
+}
+
+message LintCanvasSummary {
+  int32 total    = 1;
+  int32 errors   = 2;
+  int32 warnings = 3;
+  int32 info     = 4;
+}
+
+message LintCanvasResponse {
+  string                status   = 1;
+  repeated LintIssue    errors   = 2;
+  repeated LintIssue    warnings = 3;
+  repeated LintIssue    info     = 4;
+  LintCanvasSummary     summary  = 5;
 }

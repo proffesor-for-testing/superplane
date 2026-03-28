@@ -1,0 +1,457 @@
+metadata:
+  name: "Incident Copilot"
+  description: "AI-powered incident response: auto-triages P1/P2 production alerts, collects context from GitHub deploys, Datadog metrics, logs, and Kubernetes pods, then posts an evidence pack to Slack and routes to an approval gate before remediation."
+  isTemplate: true
+spec:
+  nodes:
+    # ── Trigger ───────────────────────────────────────────────────────────────
+    - id: "trigger-pagerduty-incident"
+      name: "New Incident"
+      type: "TYPE_TRIGGER"
+      configuration:
+        events:
+          - "incident.triggered"
+      metadata: null
+      position:
+        x: 408
+        "y": 425
+      component: null
+      blueprint: null
+      trigger:
+        name: "pagerduty.onIncident"
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Priority filter ───────────────────────────────────────────────────────
+    - id: "filter-priority"
+      name: "P1 or P2 only"
+      type: "TYPE_COMPONENT"
+      configuration:
+        expression: "$[\"New Incident\"].data.incident.priority.summary == \"P1\" || $[\"New Incident\"].data.incident.priority.summary == \"P2\""
+      metadata: null
+      position:
+        x: 933
+        "y": 425
+      component:
+        name: "filter"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Fan-out: parallel data collection ─────────────────────────────────────
+    - id: "fetch-github-release"
+      name: "Get Latest Release"
+      type: "TYPE_COMPONENT"
+      configuration:
+        repository: "my-org/production-service"
+        tag: "latest"
+      metadata: null
+      position:
+        x: 1458
+        "y": 150
+      component:
+        name: "github.getRelease"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    - id: "fetch-datadog-metrics"
+      name: "Get Error Rate"
+      type: "TYPE_COMPONENT"
+      configuration:
+        method: "GET"
+        url: "https://api.datadoghq.com/api/v2/query/timeseries?query=sum:trace.http.request.errors{env:production}.as_count()&from=now-30m&to=now"
+        headers:
+          DD-API-KEY: "{{ $['secrets'].datadog_api_key }}"
+          DD-APPLICATION-KEY: "{{ $['secrets'].datadog_app_key }}"
+      metadata: null
+      position:
+        x: 1458
+        "y": 400
+      component:
+        name: "http"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    - id: "fetch-recent-logs"
+      name: "Fetch Error Logs"
+      type: "TYPE_COMPONENT"
+      configuration:
+        method: "POST"
+        url: "https://api.datadoghq.com/api/v2/logs/events/search"
+        headers:
+          DD-API-KEY: "{{ $['secrets'].datadog_api_key }}"
+          DD-APPLICATION-KEY: "{{ $['secrets'].datadog_app_key }}"
+          Content-Type: "application/json"
+        body: "{\"filter\":{\"query\":\"status:error service:production-service\",\"from\":\"now-30m\",\"to\":\"now\"},\"page\":{\"limit\":50}}"
+      metadata: null
+      position:
+        x: 1458
+        "y": 650
+      component:
+        name: "http"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    - id: "check-pod-status"
+      name: "Check Pod Status"
+      type: "TYPE_COMPONENT"
+      configuration:
+        method: "GET"
+        url: "https://your-k8s-api.internal/api/v1/namespaces/production/pods?labelSelector=app%3Dproduction-service"
+        headers:
+          Authorization: "Bearer {{ $['secrets'].k8s_token }}"
+      metadata: null
+      position:
+        x: 1458
+        "y": 900
+      component:
+        name: "http"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Merge: wait for all data ───────────────────────────────────────────────
+    - id: "merge-all-data"
+      name: "All Data Collected"
+      type: "TYPE_COMPONENT"
+      configuration:
+        enableStopIf: false
+        enableTimeout: true
+        executionTimeout:
+          unit: "minutes"
+          value: 2
+      metadata: null
+      position:
+        x: 2079
+        "y": 425
+      component:
+        name: "merge"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── AI triage ─────────────────────────────────────────────────────────────
+    - id: "ai-triage"
+      name: "AI Triage"
+      type: "TYPE_COMPONENT"
+      configuration:
+        model: "claude-opus-4-6"
+        systemMessage: "You are an expert SRE. You analyze production incidents and produce concise, actionable triage summaries. Be factual. Do not speculate. Output valid Markdown only."
+        prompt: |
+          A production incident has been triggered. Analyze the data below and produce a structured triage report.
+
+          ## Incident Details
+          Title: {{ $["New Incident"].data.incident.title }}
+          Status: {{ $["New Incident"].data.incident.status }}
+          Priority: {{ $["New Incident"].data.incident.priority.summary }}
+          URL: {{ $["New Incident"].data.incident.html_url }}
+          Created: {{ $["New Incident"].data.incident.created_at }}
+
+          ## Most Recent Production Release
+          {{ $["Get Latest Release"].data }}
+
+          ## Error Rate (last 30 minutes)
+          {{ $["Get Error Rate"].data }}
+
+          ## Recent Error Logs (last 30 minutes, up to 50 entries)
+          {{ $["Fetch Error Logs"].data }}
+
+          ## Kubernetes Pod Status
+          {{ $["Check Pod Status"].data }}
+
+          ---
+
+          Output the following sections using these exact headings:
+
+          ## Severity Assessment
+          ONE of: P1-Critical / P2-High / P3-Medium — with 1-sentence justification.
+
+          ## What Is Happening
+          2–4 bullet points. Symptoms only, no speculation.
+
+          ## Blast Radius
+          What users/services are affected and estimated scale.
+
+          ## Likely Root Cause
+          Top hypothesis based strictly on the data. Label as hypothesis.
+
+          ## Recommended Actions
+          Ordered numbered list. Immediate actions first.
+
+          ## Escalate To
+          Which team(s) should be paged and why.
+      metadata: null
+      position:
+        x: 2687
+        "y": 425
+      component:
+        name: "claude.textPrompt"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Slack evidence pack ───────────────────────────────────────────────────
+    - id: "post-evidence-pack"
+      name: "Post Evidence Pack"
+      type: "TYPE_COMPONENT"
+      configuration:
+        channel: "#incidents"
+        text: |
+          🚨 *Incident Alert — {{ $["New Incident"].data.incident.priority.summary }}* | <{{ $["New Incident"].data.incident.html_url }}|{{ $["New Incident"].data.incident.title }}>
+
+          {{ $["AI Triage"].data.text }}
+
+          ---
+          _React with ✅ to acknowledge or use the approval node below to trigger remediation._
+      metadata: null
+      position:
+        x: 3206
+        "y": 425
+      component:
+        name: "slack.sendTextMessage"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Approval gate ─────────────────────────────────────────────────────────
+    - id: "approval-gate"
+      name: "Approve Remediation"
+      type: "TYPE_COMPONENT"
+      configuration: {}
+      metadata: null
+      position:
+        x: 3725
+        "y": 425
+      component:
+        name: "approval"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Remediation: acknowledge incident ─────────────────────────────────────
+    - id: "acknowledge-incident"
+      name: "Acknowledge Incident"
+      type: "TYPE_COMPONENT"
+      configuration:
+        incident_id: "{{ $[\"New Incident\"].data.incident.id }}"
+      metadata: null
+      position:
+        x: 4244
+        "y": 425
+      component:
+        name: "pagerduty.acknowledgeIncident"
+      blueprint: null
+      trigger: null
+      widget: null
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    # ── Annotations ───────────────────────────────────────────────────────────
+    - id: "annotation-step1"
+      name: "annotation-step1"
+      type: "TYPE_WIDGET"
+      configuration:
+        color: "yellow"
+        height: 280
+        text: |
+          ### 1. Trigger
+          Listens for new PagerDuty incidents. Only P1 and P2 incidents proceed through the filter.
+
+          **To connect:**
+          - Click "New Incident" and connect your PagerDuty account
+          - Configure the service and event types you want to respond to
+      metadata: null
+      position:
+        x: 353
+        "y": 78
+      component: null
+      blueprint: null
+      trigger: null
+      widget:
+        name: "annotation"
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    - id: "annotation-step2"
+      name: "annotation-step2"
+      type: "TYPE_WIDGET"
+      configuration:
+        color: "yellow"
+        height: 420
+        text: |
+          ### 2. Data Collection (parallel)
+          Four nodes run in parallel to gather context:
+          - **GitHub** — most recent production release
+          - **Datadog** — error rate for the last 30 minutes
+          - **Datadog Logs** — last 50 error log entries
+          - **Kubernetes** — current pod status
+
+          All four feed into a Merge node that waits for all results before continuing.
+
+          **Customize these nodes** with your actual API endpoints, service names, and credentials.
+      metadata: null
+      position:
+        x: 1403
+        "y": 78
+      component: null
+      blueprint: null
+      trigger: null
+      widget:
+        name: "annotation"
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    - id: "annotation-step3"
+      name: "annotation-step3"
+      type: "TYPE_WIDGET"
+      configuration:
+        color: "yellow"
+        height: 280
+        text: |
+          ### 3. AI Triage
+          Claude receives all collected context and produces a structured evidence pack:
+          severity, blast radius, root cause hypothesis, and recommended actions.
+
+          **Connect Claude:** Click "AI Triage" and connect your Claude account.
+          Edit the prompt to match your team's incident taxonomy.
+      metadata: null
+      position:
+        x: 2632
+        "y": 78
+      component: null
+      blueprint: null
+      trigger: null
+      widget:
+        name: "annotation"
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+    - id: "annotation-step4"
+      name: "annotation-step4"
+      type: "TYPE_WIDGET"
+      configuration:
+        color: "yellow"
+        height: 280
+        text: |
+          ### 4. Alert + Approve + Remediate
+          The evidence pack is posted to Slack. An approval gate lets an on-call engineer review before the workflow auto-acknowledges the PagerDuty incident.
+
+          **Connect Slack:** configure the #incidents channel.
+          The approval gate ensures a human is in the loop before any action is taken.
+      metadata: null
+      position:
+        x: 3151
+        "y": 78
+      component: null
+      blueprint: null
+      trigger: null
+      widget:
+        name: "annotation"
+      isCollapsed: false
+      integration: null
+      errorMessage: ""
+      warningMessage: ""
+
+  edges:
+    # Trigger → filter
+    - sourceId: "trigger-pagerduty-incident"
+      targetId: "filter-priority"
+      channel: "default"
+
+    # Filter → parallel fan-out
+    - sourceId: "filter-priority"
+      targetId: "fetch-github-release"
+      channel: "default"
+    - sourceId: "filter-priority"
+      targetId: "fetch-datadog-metrics"
+      channel: "default"
+    - sourceId: "filter-priority"
+      targetId: "fetch-recent-logs"
+      channel: "default"
+    - sourceId: "filter-priority"
+      targetId: "check-pod-status"
+      channel: "default"
+
+    # Parallel nodes → merge
+    - sourceId: "fetch-github-release"
+      targetId: "merge-all-data"
+      channel: "default"
+    - sourceId: "fetch-datadog-metrics"
+      targetId: "merge-all-data"
+      channel: "default"
+    - sourceId: "fetch-recent-logs"
+      targetId: "merge-all-data"
+      channel: "default"
+    - sourceId: "check-pod-status"
+      targetId: "merge-all-data"
+      channel: "default"
+
+    # Merge → AI triage
+    - sourceId: "merge-all-data"
+      targetId: "ai-triage"
+      channel: "default"
+
+    # AI triage → Slack
+    - sourceId: "ai-triage"
+      targetId: "post-evidence-pack"
+      channel: "default"
+
+    # Slack → Approval
+    - sourceId: "post-evidence-pack"
+      targetId: "approval-gate"
+      channel: "default"
+
+    # Approval → Acknowledge (only on approved)
+    - sourceId: "approval-gate"
+      targetId: "acknowledge-incident"
+      channel: "approved"

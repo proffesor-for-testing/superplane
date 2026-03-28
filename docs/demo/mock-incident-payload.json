@@ -1,0 +1,89 @@
+{
+  "event": {
+    "id": "01HZXK7T3VJKPQ9ABCD1234567",
+    "event_type": "incident.triggered",
+    "resource_type": "incident",
+    "occurred_at": "2026-03-28T09:15:42.000Z",
+    "agent": {
+      "html_url": "https://superplane-demo.pagerduty.com/services/P1234SV",
+      "id": "P1234SV",
+      "self": "https://api.pagerduty.com/services/P1234SV",
+      "summary": "production-api",
+      "type": "service_reference"
+    },
+    "client": {
+      "name": "Datadog"
+    },
+    "data": {
+      "id": "Q2R4X8Z6Y5",
+      "html_url": "https://superplane-demo.pagerduty.com/incidents/Q2R4X8Z6Y5",
+      "self": "https://api.pagerduty.com/incidents/Q2R4X8Z6Y5",
+      "type": "incident",
+      "summary": "[P1] Error rate on production-api exceeded 5% — 847 errors in last 5 minutes",
+      "title": "[P1] Error rate on production-api exceeded 5%",
+      "number": 1847,
+      "status": "triggered",
+      "urgency": "high",
+      "priority": {
+        "id": "P1X3YZW",
+        "name": "P1",
+        "summary": "P1",
+        "description": "Immediate action required — customer-facing impact",
+        "order_index": 1
+      },
+      "created_at": "2026-03-28T09:15:42.000Z",
+      "updated_at": "2026-03-28T09:15:42.000Z",
+      "resolved_at": null,
+      "last_status_change_at": "2026-03-28T09:15:42.000Z",
+      "last_status_change_by": {
+        "id": "PAGERDUTY",
+        "type": "service_reference",
+        "summary": "Datadog"
+      },
+      "escalation_policy": {
+        "id": "P7EPOL1",
+        "summary": "On-Call Engineering",
+        "html_url": "https://superplane-demo.pagerduty.com/escalation_policies/P7EPOL1"
+      },
+      "assigned_to": [
+        {
+          "at": "2026-03-28T09:15:42.000Z",
+          "assignee": {
+            "id": "P5ENGR1",
+            "type": "user_reference",
+            "summary": "Dragan Jovanović",
+            "html_url": "https://superplane-demo.pagerduty.com/users/P5ENGR1"
+          }
+        }
+      ],
+      "teams": [
+        {
+          "id": "PT4KXYZ",
+          "summary": "Platform Engineering",
+          "html_url": "https://superplane-demo.pagerduty.com/teams/PT4KXYZ"
+        }
+      ],
+      "service": {
+        "id": "P1234SV",
+        "summary": "production-api",
+        "html_url": "https://superplane-demo.pagerduty.com/services/P1234SV"
+      },
+      "first_trigger_log_entry": {
+        "id": "R3VLPQZ1A5BCDE2345",
+        "html_url": "https://superplane-demo.pagerduty.com/incidents/Q2R4X8Z6Y5/log_entries/R3VLPQZ1A5BCDE2345",
+        "type": "trigger_log_entry_reference",
+        "summary": "Triggered through Datadog"
+      },
+      "alert_counts": {
+        "all": 1,
+        "triggered": 1,
+        "resolved": 0
+      },
+      "is_mergeable": true,
+      "conference_bridge": null,
+      "body": {
+        "details": "Monitor Alert: Error rate on production-api exceeded 5%\n\nTriggered at: 2026-03-28T09:15:42 UTC\n\nMonitor: https://app.datadoghq.com/monitors/1234567\n\nMetric: sum:trace.http.request.errors{service:production-api,env:production}.as_count()\nValue: 847 errors in the last 5 minutes (threshold: 50)\n\nNotification triggered by Datadog monitor 'production-api error rate'."
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "logs": [
+    {
+      "id": "AAAAAAAAAAAAAAAAAAAAAA",
+      "content": {
+        "timestamp": "2026-03-28T14:28:45.123Z",
+        "message": "ERROR: Database connection pool exhausted - all 50 connections in use",
+        "attributes": {
+          "service": "api-gateway",
+          "env": "production",
+          "level": "error",
+          "logger": "db.pool",
+          "thread": "http-handler-12"
+        },
+        "tags": ["service:api-gateway", "env:production"]
+      },
+      "host": "api-gateway-prod-3",
+      "service": "api-gateway"
+    },
+    {
+      "id": "AAAAAAAAAAAAAAAAAAAAB",
+      "content": {
+        "timestamp": "2026-03-28T14:28:46.456Z",
+        "message": "HTTP 500: POST /api/v1/orders - ConnectionAcquireTimeoutError: Unable to acquire connection within 5000ms",
+        "attributes": {
+          "service": "api-gateway",
+          "env": "production",
+          "level": "error",
+          "http": {
+            "method": "POST",
+            "url": "/api/v1/orders",
+            "status_code": 500,
+            "duration_ms": 5023
+          }
+        },
+        "tags": ["service:api-gateway", "env:production", "http"]
+      },
+      "host": "api-gateway-prod-3",
+      "service": "api-gateway"
+    },
+    {
+      "id": "AAAAAAAAAAAAAAAAAAAAC",
+      "content": {
+        "timestamp": "2026-03-28T14:28:47.789Z",
+        "message": "ERROR: Payment gateway timeout - client.waitForConnection() exceeded 30000ms",
+        "attributes": {
+          "service": "api-gateway",
+          "env": "production",
+          "level": "error",
+          "component": "payment-client",
+          "operation": "waitForConnection"
+        },
+        "tags": ["service:api-gateway", "env:production", "payment"]
+      },
+      "host": "api-gateway-prod-5",
+      "service": "api-gateway"
+    },
+    {
+      "id": "AAAAAAAAAAAAAAAAAAAAAD",
+      "content": {
+        "timestamp": "2026-03-28T14:28:48.012Z",
+        "message": "WARN: Order validation failed for request id=abc-123 - timeout after 15000ms",
+        "attributes": {
+          "service": "api-gateway",
+          "env": "production",
+          "level": "warn",
+          "component": "order-validator",
+          "request_id": "abc-123"
+        },
+        "tags": ["service:api-gateway", "env:production", "orders"]
+      },
+      "host": "api-gateway-prod-2",
+      "service": "api-gateway"
+    }
+  ],
+  "next_log_id": "AAAAAAAAAAAAAAAAAAAAAE",
+  "status": "ok"
+}

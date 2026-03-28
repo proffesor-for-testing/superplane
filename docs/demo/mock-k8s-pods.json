@@ -1,0 +1,152 @@
+{
+  "apiVersion": "v1",
+  "kind": "PodList",
+  "metadata": {
+    "resourceVersion": "12345678",
+    "selfLink": "/api/v1/namespaces/production/pods"
+  },
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "api-gateway-prod-1",
+        "namespace": "production",
+        "uid": "aaaaaaaa-1111-1111-1111-111111111111",
+        "resourceVersion": "12345670",
+        "creationTimestamp": "2026-03-28T12:00:00Z",
+        "labels": {
+          "app": "api-gateway",
+          "version": "v2.14.3",
+          "pod-template-hash": "abc12345"
+        }
+      },
+      "spec": {
+        "nodeName": "worker-node-3",
+        "containers": [
+          {
+            "name": "api-gateway",
+            "image": "my-org/api-gateway:v2.14.3",
+            "ports": [{"containerPort": 8080, "protocol": "TCP"}]
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "podIP": "10.244.2.45",
+        "hostIP": "192.168.1.103",
+        "startTime": "2026-03-28T12:00:05Z",
+        "containerStatuses": [
+          {
+            "name": "api-gateway",
+            "state": {
+              "running": {
+                "startedAt": "2026-03-28T12:00:10Z"
+              }
+            },
+            "ready": true,
+            "restartCount": 0,
+            "image": "my-org/api-gateway:v2.14.3"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "api-gateway-prod-2",
+        "namespace": "production",
+        "uid": "aaaaaaaa-2222-2222-2222-222222222222",
+        "resourceVersion": "12345671",
+        "creationTimestamp": "2026-03-28T12:00:00Z",
+        "labels": {
+          "app": "api-gateway",
+          "version": "v2.14.3",
+          "pod-template-hash": "abc12345"
+        }
+      },
+      "spec": {
+        "nodeName": "worker-node-5",
+        "containers": [
+          {
+            "name": "api-gateway",
+            "image": "my-org/api-gateway:v2.14.3",
+            "ports": [{"containerPort": 8080, "protocol": "TCP"}]
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "podIP": "10.244.3.67",
+        "hostIP": "192.168.1.105",
+        "startTime": "2026-03-28T12:00:05Z",
+        "containerStatuses": [
+          {
+            "name": "api-gateway",
+            "state": {
+              "running": {
+                "startedAt": "2026-03-28T12:00:11Z"
+              }
+            },
+            "ready": true,
+            "restartCount": 0,
+            "image": "my-org/api-gateway:v2.14.3"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "api-gateway-prod-3",
+        "namespace": "production",
+        "uid": "aaaaaaaa-3333-3333-3333-333333333333",
+        "resourceVersion": "12345675",
+        "creationTimestamp": "2026-03-28T12:00:00Z",
+        "labels": {
+          "app": "api-gateway",
+          "version": "v2.14.3",
+          "pod-template-hash": "abc12345"
+        }
+      },
+      "spec": {
+        "nodeName": "worker-node-7",
+        "containers": [
+          {
+            "name": "api-gateway",
+            "image": "my-org/api-gateway:v2.14.3",
+            "ports": [{"containerPort": 8080, "protocol": "TCP"}]
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running",
+        "podIP": "10.244.4.89",
+        "hostIP": "192.168.1.107",
+        "startTime": "2026-03-28T12:00:05Z",
+        "containerStatuses": [
+          {
+            "name": "api-gateway",
+            "state": {
+              "running": {
+                "startedAt": "2026-03-28T12:00:12Z"
+              }
+            },
+            "ready": true,
+            "restartCount": 1,
+            "image": "my-org/api-gateway:v2.14.3",
+            "lastState": {
+              "terminated": {
+                "exitCode": 137,
+                "reason": "OOMKilled",
+                "finishedAt": "2026-03-28T14:20:00Z"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

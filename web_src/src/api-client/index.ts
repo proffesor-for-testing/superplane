@@ -17,6 +17,7 @@ export {
   canvasesCreateCanvasChangeRequest,
   canvasesCreateCanvasVersion,
   canvasesDeleteCanvas,
+  canvasesLintCanvas,
   canvasesDeleteCanvasMemory,
   canvasesDeleteNodeQueueItem,
   canvasesDescribeCanvas,
