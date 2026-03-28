@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Professorianci — Incident Copilot + Workflow Linter</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .slide { display: none; min-height: 100vh; padding: 60px 80px; flex-direction: column; justify-content: center; }
+  .slide.active { display: flex; }
+  h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; }
+  h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 30px; color: #38bdf8; }
+  .subtitle { font-size: 1.4rem; color: #94a3b8; margin-bottom: 40px; }
+  .big-number { font-size: 5rem; font-weight: 900; color: #f43f5e; }
+  .big-number.green { color: #22c55e; }
+  .stat-row { display: flex; gap: 60px; margin: 30px 0; }
+  .stat { text-align: center; }
+  .stat-value { font-size: 3rem; font-weight: 800; color: #38bdf8; }
+  .stat-label { font-size: 1.1rem; color: #94a3b8; margin-top: 8px; }
+  ul { list-style: none; font-size: 1.5rem; line-height: 2.2; }
+  ul li::before { content: "→ "; color: #38bdf8; font-weight: bold; }
+  .flow { font-size: 1.3rem; color: #cbd5e1; line-height: 2; font-family: monospace; }
+  .flow .node { color: #22c55e; font-weight: bold; }
+  .flow .arrow { color: #64748b; }
+  .team { font-size: 1.2rem; color: #64748b; position: fixed; bottom: 30px; left: 80px; }
+  .nav { position: fixed; bottom: 30px; right: 40px; font-size: 0.9rem; color: #475569; }
+  .tag { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 1rem; font-weight: 600; margin-right: 10px; }
+  .tag.red { background: #7f1d1d; color: #fca5a5; }
+  .tag.green { background: #14532d; color: #86efac; }
+  .tag.blue { background: #1e3a5f; color: #93c5fd; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 30px; }
+  .col h3 { font-size: 1.5rem; color: #f59e0b; margin-bottom: 16px; }
+  .col ul { font-size: 1.2rem; line-height: 2; }
+</style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide active" id="s1">
+  <h1>Incident Copilot + Workflow Linter</h1>
+  <p class="subtitle">Professorianci &mdash; Dragan, Braca, Fedja</p>
+  <p style="font-size:1.2rem; color:#64748b;">SuperPlane Hackathon &bull; March 28, 2026 &bull; Novi Sad</p>
+</div>
+
+<!-- Slide 2: The Problem -->
+<div class="slide" id="s2">
+  <h2>The Problem</h2>
+  <div class="big-number">3:00 AM</div>
+  <p style="font-size:1.8rem; margin-top:20px;">PagerDuty fires. Your engineer wakes up.</p>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">dashboards to check</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">20 min</div>
+      <div class="stat-label">to understand the problem</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">1,247</div>
+      <div class="stat-label">users affected</div>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 3: The Solution -->
+<div class="slide" id="s3">
+  <h2>What We Built</h2>
+  <div class="two-col">
+    <div class="col">
+      <h3>Incident Copilot</h3>
+      <ul>
+        <li>PagerDuty alert triggers canvas</li>
+        <li>Fan-out: GitHub, Datadog, PD, K8s</li>
+        <li>AI triage via Claude</li>
+        <li>Slack evidence pack in 47 seconds</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Workflow Linter</h3>
+      <ul>
+        <li>5 lint rules for canvas safety</li>
+        <li>Detects orphan nodes &amp; cycles</li>
+        <li>Enforces approval before destructive ops</li>
+        <li>Validates expression syntax</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 4: How It Works -->
+<div class="slide" id="s4">
+  <h2>Incident Copilot Flow</h2>
+  <div class="flow">
+    <span class="node">Webhook Trigger</span> <span class="arrow">&rarr;</span>
+    <span class="node">Fan-out (4 branches)</span><br><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├─</span> <span class="node">GitHub</span> &mdash; recent deploys<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├─</span> <span class="node">Datadog</span> &mdash; error rate &amp; latency<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├─</span> <span class="node">PagerDuty</span> &mdash; incident logs<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">└─</span> <span class="node">Kubernetes</span> &mdash; pod status<br><br>
+    <span class="node">Merge</span> <span class="arrow">&rarr;</span>
+    <span class="node">AI Triage (Claude)</span> <span class="arrow">&rarr;</span>
+    <span class="node">Approval Gate</span> <span class="arrow">&rarr;</span>
+    <span class="node">Slack</span>
+  </div>
+</div>
+
+<!-- Slide 5: By The Numbers -->
+<div class="slide" id="s5">
+  <h2>By The Numbers</h2>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-value">9</div>
+      <div class="stat-label">canvas nodes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">lint rules</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">30</div>
+      <div class="stat-label">unit tests</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">47s</div>
+      <div class="stat-label">alert to triage</div>
+    </div>
+  </div>
+  <div style="margin-top:40px;">
+    <span class="tag red">Before: 20 min manual triage</span>
+    <span class="tag green">After: 47 sec automated triage</span>
+  </div>
+</div>
+
+<!-- Slide 6: What's Next -->
+<div class="slide" id="s6">
+  <h2>What's Next</h2>
+  <ul>
+    <li>Linter as a built-in pre-publish hook in SuperPlane</li>
+    <li>Template library for common incident types (DB, API, Infra)</li>
+    <li>Self-healing: AI suggests workflow fixes when linter finds issues</li>
+    <li>Canvas-to-JSON export for CI/CD linting pipelines</li>
+  </ul>
+  <p style="margin-top:60px; font-size:2rem; color:#22c55e; font-weight:700;">Thank you! Questions?</p>
+</div>
+
+<div class="team">Professorianci &mdash; Dragan, Braca, Fedja</div>
+<div class="nav">← → to navigate &bull; <span id="page-num">1</span>/6</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    document.getElementById('page-num').textContent = current + 1;
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') show(current + 1);
+    if (e.key === 'ArrowLeft') show(current - 1);
+  });
+  document.addEventListener('click', e => {
+    if (e.clientX > window.innerWidth / 2) show(current + 1);
+    else show(current - 1);
+  });
+</script>
+</body>
+</html>

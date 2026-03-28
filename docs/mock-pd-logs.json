@@ -1,0 +1,19 @@
+{
+  "log_entries": [
+    {
+      "type": "trigger_log_entry",
+      "created_at": "2026-03-28T14:30:00Z",
+      "summary": "Triggered by Datadog monitor: API 5xx Error Rate > 5%"
+    },
+    {
+      "type": "notify_log_entry",
+      "created_at": "2026-03-28T14:30:05Z",
+      "summary": "Notified Dragan Petrovic via push notification"
+    },
+    {
+      "type": "annotate_log_entry",
+      "created_at": "2026-03-28T14:30:10Z",
+      "summary": "Correlated with deploy-api-v2.14.3 (14:25 UTC)"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "nodes": [
+    {
+      "id": "webhook-trigger-1",
+      "name": "PagerDuty Incident",
+      "type": "trigger",
+      "ref": { "trigger": { "name": "webhook" } },
+      "configuration": {},
+      "metadata": {},
+      "position": { "x": 100, "y": 300 }
+    },
+    {
+      "id": "ai-triage-1",
+      "name": "AI Triage (Claude)",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "headers": "{{ {\"x-api-key\": secrets.anthropic_api_key, \"anthropic-version\": \"2023-06-01\", \"content-type\": \"application/json\"} }}",
+        "body": "{{ {\"model\": \"claude-sonnet-4-20250514\", \"max_tokens\": 1024, \"system\": \"You are an SRE incident triage AI. Produce a structured JSON severity assessment.\", \"messages\": [{\"role\": \"user\", \"content\": \"Triage this incident: \" + toJson(event)}]} }}"
+      },
+      "metadata": {},
+      "position": { "x": 500, "y": 300 }
+    },
+    {
+      "id": "approval-1",
+      "name": "Approve Remediation",
+      "type": "component",
+      "ref": { "component": { "name": "approval" } },
+      "configuration": {},
+      "metadata": {},
+      "position": { "x": 900, "y": 300 }
+    },
+    {
+      "id": "http-slack-1",
+      "name": "Send to Slack",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://slack.com/api/chat.postMessage",
+        "method": "POST",
+        "headers": "{{ {\"Authorization\": \"Bearer \" + secrets.slack_bot_token, \"content-type\": \"application/json\"} }}",
+        "body": "{{ {\"channel\": \"#incidents\", \"text\": nodes['ai-triage-1'].output.content[0].text} }}"
+      },
+      "metadata": {},
+      "position": { "x": 1300, "y": 300 }
+    }
+  ],
+  "edges": [
+    { "source_id": "webhook-trigger-1", "target_id": "ai-triage-1", "channel": "default" },
+    { "source_id": "ai-triage-1", "target_id": "approval-1", "channel": "success" },
+    { "source_id": "approval-1", "target_id": "http-slack-1", "channel": "approved" }
+  ]
+}

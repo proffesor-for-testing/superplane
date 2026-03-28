@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "id": "webhook-trigger-1",
+      "name": "PagerDuty Incident",
+      "type": "trigger",
+      "ref": { "trigger": { "name": "webhook" } },
+      "configuration": {},
+      "metadata": {},
+      "position": { "x": 100, "y": 300 }
+    },
+    {
+      "id": "http-github-1",
+      "name": "Fetch Recent Deploys",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.github.com/repos/acme/api-gateway/releases/latest",
+        "method": "GET"
+      },
+      "metadata": {},
+      "position": { "x": 400, "y": 100 }
+    },
+    {
+      "id": "http-datadog-1",
+      "name": "Fetch Datadog Metrics",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.datadoghq.com/api/v1/query?query={{ }}",
+        "method": "GET"
+      },
+      "metadata": {},
+      "position": { "x": 400, "y": 250 }
+    },
+    {
+      "id": "orphan-node-1",
+      "name": "Disconnected Logger",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {},
+      "metadata": {},
+      "position": { "x": 800, "y": 600 }
+    },
+    {
+      "id": "ai-triage-1",
+      "name": "AI Triage (Claude)",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST"
+      },
+      "metadata": {},
+      "position": { "x": 700, "y": 300 }
+    },
+    {
+      "id": "delete-pods-1",
+      "name": "Delete Failing Pods",
+      "type": "component",
+      "ref": { "component": { "name": "kubernetes.deletePod" } },
+      "configuration": {
+        "namespace": "production",
+        "label": "app=api-gateway"
+      },
+      "metadata": {},
+      "position": { "x": 1000, "y": 300 }
+    }
+  ],
+  "edges": [
+    { "source_id": "webhook-trigger-1", "target_id": "http-github-1", "channel": "default" },
+    { "source_id": "webhook-trigger-1", "target_id": "http-datadog-1", "channel": "default" },
+    { "source_id": "http-github-1", "target_id": "ai-triage-1", "channel": "success" },
+    { "source_id": "http-datadog-1", "target_id": "ai-triage-1", "channel": "success" },
+    { "source_id": "ai-triage-1", "target_id": "delete-pods-1", "channel": "success" }
+  ]
+}

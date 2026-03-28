@@ -1,0 +1,122 @@
+{
+  "nodes": [
+    {
+      "id": "webhook-trigger-1",
+      "name": "PagerDuty Incident",
+      "type": "trigger",
+      "ref": { "trigger": { "name": "webhook" } },
+      "configuration": {},
+      "metadata": {},
+      "position": { "x": 100, "y": 300 }
+    },
+    {
+      "id": "http-github-1",
+      "name": "Fetch Recent Deploys",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.github.com/repos/acme/api-gateway/releases/latest",
+        "method": "GET",
+        "headers": "{{ {\"Authorization\": \"Bearer \" + secrets.github_token} }}"
+      },
+      "metadata": {},
+      "position": { "x": 400, "y": 100 }
+    },
+    {
+      "id": "http-datadog-1",
+      "name": "Fetch Datadog Metrics",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.datadoghq.com/api/v1/query?query={{ event.data.service.summary }}",
+        "method": "GET"
+      },
+      "metadata": {},
+      "position": { "x": 400, "y": 250 }
+    },
+    {
+      "id": "http-pd-logs-1",
+      "name": "Fetch PD Log Entries",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.pagerduty.com/incidents/{{ event.data.id }}/log_entries",
+        "method": "GET"
+      },
+      "metadata": {},
+      "position": { "x": 400, "y": 400 }
+    },
+    {
+      "id": "http-k8s-1",
+      "name": "Fetch Pod Status",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://k8s.internal/api/v1/namespaces/production/pods?labelSelector=app%3Dapi-gateway",
+        "method": "GET"
+      },
+      "metadata": {},
+      "position": { "x": 400, "y": 550 }
+    },
+    {
+      "id": "merge-1",
+      "name": "Collect All Data",
+      "type": "component",
+      "ref": { "component": { "name": "merge" } },
+      "configuration": {
+        "sources": "4",
+        "timeout": "30"
+      },
+      "metadata": {},
+      "position": { "x": 700, "y": 300 }
+    },
+    {
+      "id": "ai-triage-1",
+      "name": "AI Triage (Claude)",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://api.anthropic.com/v1/messages",
+        "method": "POST",
+        "body": "{{ {\"model\": \"claude-sonnet-4-20250514\", \"max_tokens\": 1024, \"messages\": [{\"role\": \"user\", \"content\": \"You are an incident triage AI. Analyze this incident and produce a structured severity assessment.\\n\\nIncident: \" + toJson(event) + \"\\n\\nDeploy info: \" + toJson(nodes['http-github-1'].output) + \"\\n\\nMetrics: \" + toJson(nodes['http-datadog-1'].output) + \"\\n\\nLogs: \" + toJson(nodes['http-pd-logs-1'].output) + \"\\n\\nPod status: \" + toJson(nodes['http-k8s-1'].output)}]} }}"
+      },
+      "metadata": {},
+      "position": { "x": 1000, "y": 300 }
+    },
+    {
+      "id": "approval-1",
+      "name": "Approve Remediation",
+      "type": "component",
+      "ref": { "component": { "name": "approval" } },
+      "configuration": {},
+      "metadata": {},
+      "position": { "x": 1300, "y": 300 }
+    },
+    {
+      "id": "http-slack-1",
+      "name": "Send to Slack",
+      "type": "component",
+      "ref": { "component": { "name": "http" } },
+      "configuration": {
+        "url": "https://slack.com/api/chat.postMessage",
+        "method": "POST",
+        "body": "{{ {\"channel\": \"#incidents\", \"text\": nodes['ai-triage-1'].output.content} }}"
+      },
+      "metadata": {},
+      "position": { "x": 1600, "y": 300 }
+    }
+  ],
+  "edges": [
+    { "source_id": "webhook-trigger-1", "target_id": "http-github-1", "channel": "default" },
+    { "source_id": "webhook-trigger-1", "target_id": "http-datadog-1", "channel": "default" },
+    { "source_id": "webhook-trigger-1", "target_id": "http-pd-logs-1", "channel": "default" },
+    { "source_id": "webhook-trigger-1", "target_id": "http-k8s-1", "channel": "default" },
+    { "source_id": "http-github-1", "target_id": "merge-1", "channel": "success" },
+    { "source_id": "http-datadog-1", "target_id": "merge-1", "channel": "success" },
+    { "source_id": "http-pd-logs-1", "target_id": "merge-1", "channel": "success" },
+    { "source_id": "http-k8s-1", "target_id": "merge-1", "channel": "success" },
+    { "source_id": "merge-1", "target_id": "ai-triage-1", "channel": "success" },
+    { "source_id": "ai-triage-1", "target_id": "approval-1", "channel": "success" },
+    { "source_id": "approval-1", "target_id": "http-slack-1", "channel": "approved" }
+  ]
+}

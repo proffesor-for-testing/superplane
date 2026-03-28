@@ -360,3 +360,26 @@ tag.create.patch:
 
 tag.create.minor:
 	./release/create_tag.sh minor
+
+#
+# Hackathon: Incident Copilot + Workflow Linter
+#
+
+hackathon.build:
+	go build -o bin/linter ./cmd/linter/
+	go build -o bin/mockserver ./cmd/mockserver/
+
+hackathon.test:
+	go test ./pkg/linter/ -v -count=1
+
+hackathon.lint.pass:
+	@bin/linter docs/incident-copilot-canvas.json
+
+hackathon.lint.fail:
+	@bin/linter docs/incident-copilot-canvas-broken.json || true
+
+hackathon.mockserver:
+	bin/mockserver
+
+hackathon.demo:
+	./docs/demo/run-demo.sh all
